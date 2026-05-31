@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>入出金管理帳</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@600;700&family=Noto+Sans+JP:wght@300;400;500&display=swap');
+
+:root {
+  --ink: #1a1410;
+  --paper: #faf7f2;
+  --paper2: #f0e9dc;
+  --white: #ffffff;
+  --in: #1a6b3a;
+  --in-light: #e8f5ee;
+  --in-mid: #2d9a57;
+  --out: #8b1a1a;
+  --out-light: #fdf0f0;
+  --out-mid: #c0392b;
+  --rule: #ddd3bb;
+  --muted: #7a6e5f;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 15px;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* HEADER */
+header {
+  background: var(--ink);
+  color: var(--paper);
+  padding: calc(14px + var(--safe-top)) 20px 14px;
+  border-bottom: 3px solid var(--in-mid);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+header h1 { font-family: 'Noto Serif JP', serif; font-size: 18px; letter-spacing: 0.12em; }
+header .sub { font-size: 10px; color: #a89880; letter-spacing: 0.18em; margin-top: 2px; }
+
+/* MONTH NAV */
+.month-nav { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.month-nav button {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
+  width: 34px; height: 34px;
+  font-size: 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.month-nav button:active { background: rgba(255,255,255,0.25); }
+.month-label {
+  font-family: 'Noto Serif JP', serif;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  min-width: 96px;
+  text-align: center;
+}
+
+/* MAIN */
+main {
+  padding: 16px 16px calc(16px + var(--safe-bot));
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* TYPE TOGGLE */
+.type-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  margin-bottom: 16px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid var(--rule);
+}
+.type-btn {
+  padding: 13px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--white);
+  color: var(--muted);
+}
+.type-btn.active-in { background: var(--in); color: white; }
+.type-btn.active-out { background: var(--out); color: white; }
+.type-btn:active { opacity: 0.8; }
+
+/* CARD */
+.card {
+  background: var(--white);
+  border-radius: 12px;
+  border: 1px solid var(--rule);
+  overflow: hidden;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+}
+.card-head-in  { background: var(--in);  color: white; padding: 10px 16px; font-size: 12px; letter-spacing: 0.16em; font-weight: 500; }
+.card-head-out { background: var(--out); color: white; padding: 10px 16px; font-size: 12px; letter-spacing: 0.16em; font-weight: 500; }
+.card-body { padding: 16px; }
+
+/* FIELDS */
+.field { margin-bottom: 12px; }
+.field:last-child { margin-bottom: 0; }
+.field label { display: block; font-size: 11px; letter-spacing: 0.12em; color: var(--muted); margin-bottom: 5px; }
+.field input {
+  width: 100%;
+  border: 1.5px solid var(--rule);
+  background: var(--paper);
+  padding: 11px 13px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 15px;
+  color: var(--ink);
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.field input:focus { border-color: var(--in-mid); background: #f8fff8; }
+.field input.out-focus:focus { border-color: var(--out-mid); background: #fff8f8; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* ADD BUTTON */
+.btn-add-in {
+  width: 100%; background: var(--in); color: white; border: none;
+  padding: 14px; font-family: 'Noto Sans JP', sans-serif; font-size: 15px;
+  letter-spacing: 0.1em; border-radius: 10px; cursor: pointer; margin-top: 14px;
+  font-weight: 500; transition: background 0.2s, transform 0.1s;
+}
+.btn-add-in:active { background: #145a30; transform: scale(0.98); }
+.btn-add-out {
+  width: 100%; background: var(--out); color: white; border: none;
+  padding: 14px; font-family: 'Noto Sans JP', sans-serif; font-size: 15px;
+  letter-spacing: 0.1em; border-radius: 10px; cursor: pointer; margin-top: 14px;
+  font-weight: 500; transition: background 0.2s, transform 0.1s;
+}
+.btn-add-out:active { background: #6b1010; transform: scale(0.98); }
+
+/* SUMMARY */
+.summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+.stat {
+  background: var(--white); border: 1px solid var(--rule);
+  border-radius: 10px; padding: 11px 6px; text-align: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.stat .s-label { font-size: 10px; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 4px; }
+.stat .s-value { font-family: 'Noto Serif JP', serif; font-size: 15px; font-weight: 600; color: var(--ink); word-break: break-all; }
+.stat .s-value.c-in  { color: var(--in); }
+.stat .s-value.c-out { color: var(--out); }
+.stat .s-value.c-bal.positive { color: var(--in); }
+.stat .s-value.c-bal.negative { color: var(--out); }
+
+/* VIEW TOGGLE */
+.view-toggle {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0;
+  margin-bottom: 12px; border-radius: 8px; overflow: hidden;
+  border: 1.5px solid var(--rule);
+}
+.view-btn {
+  padding: 10px 4px; font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13px; font-weight: 500; border: none; cursor: pointer;
+  background: var(--white); color: var(--muted); transition: all 0.2s;
+  letter-spacing: 0.06em;
+}
+.view-btn.active { background: var(--ink); color: white; }
+.view-btn:active { opacity: 0.8; }
+
+/* SEC HEAD */
+.sec-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.sec-title { font-family: 'Noto Serif JP', serif; font-size: 13px; letter-spacing: 0.14em; color: var(--muted); }
+.btn-print {
+  background: var(--white); border: 1.5px solid var(--rule); color: var(--ink);
+  padding: 8px 14px; font-family: 'Noto Sans JP', sans-serif; font-size: 13px;
+  letter-spacing: 0.08em; border-radius: 8px; cursor: pointer; font-weight: 500;
+  flex-shrink: 0; transition: background 0.2s;
+}
+.btn-print:active { background: var(--paper2); }
+
+/* RECORD LIST */
+.rec-list { display: flex; flex-direction: column; gap: 8px; }
+.rec-item {
+  background: var(--white); border: 1px solid var(--rule);
+  border-radius: 10px; padding: 13px 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.rec-item.type-in  { border-left: 3px solid var(--in-mid); }
+.rec-item.type-out { border-left: 3px solid var(--out-mid); }
+.rec-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.rec-dest { font-weight: 500; font-size: 15px; flex: 1; line-height: 1.35; }
+.rec-amount-in  { font-family: 'Noto Serif JP', serif; font-size: 17px; font-weight: 600; color: var(--in);  white-space: nowrap; }
+.rec-amount-out { font-family: 'Noto Serif JP', serif; font-size: 17px; font-weight: 600; color: var(--out); white-space: nowrap; }
+.rec-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.rec-date { font-size: 12px; color: var(--muted); }
+.rec-tag { font-size: 11px; background: var(--paper2); color: var(--muted); padding: 2px 8px; border-radius: 4px; }
+.rec-type-badge-in  { font-size: 10px; background: var(--in-light);  color: var(--in);  padding: 2px 7px; border-radius: 4px; font-weight: 500; }
+.rec-type-badge-out { font-size: 10px; background: var(--out-light); color: var(--out); padding: 2px 7px; border-radius: 4px; font-weight: 500; }
+.rec-bottom { display: flex; justify-content: flex-end; margin-top: 8px; }
+.btn-del { background: none; border: 1px solid #e0d8cc; color: #bbb; padding: 4px 10px; font-size: 12px; border-radius: 6px; cursor: pointer; }
+.btn-del:active { border-color: var(--out); color: var(--out); background: #fff5f5; }
+
+/* TOTAL ROW */
+.total-row {
+  border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px;
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 12px; font-weight: 500;
+}
+.total-row.in-row  { background: var(--in-light); }
+.total-row.out-row { background: var(--out-light); }
+.total-row.bal-row { background: var(--paper2); }
+.total-row .t-label { font-size: 13px; letter-spacing: 0.1em; color: var(--muted); }
+.total-row .t-val { font-family: 'Noto Serif JP', serif; font-size: 20px; font-weight: 700; }
+.total-row.in-row  .t-val { color: var(--in); }
+.total-row.out-row .t-val { color: var(--out); }
+.total-row.bal-row .t-val.positive { color: var(--in); }
+.total-row.bal-row .t-val.negative { color: var(--out); }
+
+/* EMPTY */
+.empty { background: var(--white); border: 1px solid var(--rule); border-radius: 12px; padding: 40px 20px; text-align: center; color: var(--muted); font-size: 14px; letter-spacing: 0.1em; }
+
+/* PRINT */
+@media print {
+  header { background: #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; position: static; }
+  .card, .type-toggle, .btn-print, .btn-del, .view-toggle { }
+  .card { display: none !important; }
+  .type-toggle { display: none !important; }
+  .btn-print { display: none !important; }
+  .btn-del { display: none !important; }
+  .view-toggle { display: none !important; }
+  body { background: white; font-size: 12px; }
+  .rec-item { border-radius: 0; border: none; border-bottom: 1px solid #ccc; box-shadow: none; page-break-inside: avoid; }
+  @page { margin: 15mm; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div>
+      <h1>入出金管理帳</h1>
+      <div class="sub">INCOME &amp; EXPENSE RECORD</div>
+    </div>
+    <div class="month-nav">
+      <button id="prevMonth">◀</button>
+      <div class="month-label" id="monthDisplay"></div>
+      <button id="nextMonth">▶</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- TYPE TOGGLE -->
+  <div class="type-toggle">
+    <button class="type-btn" id="tabIn" onclick="switchTab('in')">＋ 入金入力</button>
+    <button class="type-btn active-out" id="tabOut" onclick="switchTab('out')">－ 出金入力</button>
+  </div>
+
+  <!-- INPUT: 入金 -->
+  <div class="card" id="formIn" style="display:none">
+    <div class="card-head-in">▸ 入金　新規入力</div>
+    <div class="card-body">
+      <div class="field-row">
+        <div class="field">
+          <label>日付</label>
+          <input type="date" id="inDate">
+        </div>
+        <div class="field">
+          <label>金額（円）</label>
+          <input type="number" id="inAmount" placeholder="0" inputmode="numeric">
+        </div>
+      </div>
+      <div class="field">
+        <label>入金先（口座・振込先）</label>
+        <input type="text" id="inDest" placeholder="例：○○銀行 普通 1234567" list="destList" autocomplete="off">
+        <datalist id="destList"></datalist>
+      </div>
+      <div class="field">
+        <label>内容・摘要</label>
+        <input type="text" id="inDesc" placeholder="例：売上代金" list="inDescList" autocomplete="off">
+        <datalist id="inDescList"></datalist>
+      </div>
+      <div class="field">
+        <label>店舗・部門</label>
+        <input type="text" id="inStore" placeholder="例：新宿店" list="inStoreList" autocomplete="off">
+        <datalist id="inStoreList"></datalist>
+      </div>
+      <button class="btn-add-in" id="btnAddIn">＋ 入金を追加</button>
+    </div>
+  </div>
+
+  <!-- INPUT: 出金 -->
+  <div class="card" id="formOut">
+    <div class="card-head-out">▸ 出金　新規入力</div>
+    <div class="card-body">
+      <div class="field-row">
+        <div class="field">
+          <label>日付</label>
+          <input type="date" id="outDate">
+        </div>
+        <div class="field">
+          <label>金額（円）</label>
+          <input type="number" id="outAmount" placeholder="0" inputmode="numeric" class="out-focus">
+        </div>
+      </div>
+      <div class="field">
+        <label>支払先</label>
+        <input type="text" id="outDest" placeholder="例：○○株式会社" list="outDestList" autocomplete="off" class="out-focus">
+        <datalist id="outDestList"></datalist>
+      </div>
+      <div class="field">
+        <label>内容・摘要</label>
+        <input type="text" id="outDesc" placeholder="例：仕入代金、経費" list="outDescList" autocomplete="off" class="out-focus">
+        <datalist id="outDescList"></datalist>
+      </div>
+      <div class="field">
+        <label>店舗・部門</label>
+        <input type="text" id="outStore" placeholder="例：新宿店" list="outStoreList" autocomplete="off" class="out-focus">
+        <datalist id="outStoreList"></datalist>
+      </div>
+      <button class="btn-add-out" id="btnAddOut">－ 出金を追加</button>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="summary">
+    <div class="stat">
+      <div class="s-label">入金合計</div>
+      <div class="s-value c-in" id="statIn">¥0</div>
+    </div>
+    <div class="stat">
+      <div class="s-label">出金合計</div>
+      <div class="s-value c-out" id="statOut">¥0</div>
+    </div>
+    <div class="stat">
+      <div class="s-label">収支</div>
+      <div class="s-value c-bal" id="statBal">¥0</div>
+    </div>
+  </div>
+
+  <!-- VIEW TOGGLE -->
+  <div class="view-toggle">
+    <button class="view-btn active" id="viewAll" onclick="switchView('all')">すべて</button>
+    <button class="view-btn" id="viewIn"  onclick="switchView('in')">入金のみ</button>
+    <button class="view-btn" id="viewOut" onclick="switchView('out')">出金のみ</button>
+  </div>
+
+  <!-- LIST -->
+  <div class="sec-head">
+    <div class="sec-title" id="tableTitle">入出金一覧</div>
+    <button class="btn-print" id="btnPrint">🖨 印刷</button>
+  </div>
+  <div id="listWrap"></div>
+
+</main>
+
+<script>
+  var KEY = 'inout_records_v1';
+  var records = JSON.parse(localStorage.getItem(KEY) || '[]');
+  var now = new Date();
+  var cy = now.getFullYear(), cm = now.getMonth() + 1;
+  var currentTab = 'out';
+  var currentView = 'all';
+
+  function save() { localStorage.setItem(KEY, JSON.stringify(records)); }
+
+  // Month nav
+  function setMonth(y, m) {
+    cy = y; cm = m;
+    document.getElementById('monthDisplay').textContent = cy + '年' + cm + '月';
+    render();
+  }
+  document.getElementById('prevMonth').addEventListener('click', function() {
+    var m = cm-1, y = cy; if(m<1){m=12;y--;} setMonth(y,m);
+  });
+  document.getElementById('nextMonth').addEventListener('click', function() {
+    var m = cm+1, y = cy; if(m>12){m=1;y++;} setMonth(y,m);
+  });
+
+  // Print
+  document.getElementById('btnPrint').addEventListener('click', function() { window.print(); });
+
+  // Date defaults
+  (function() {
+    var d = new Date();
+    var s = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    document.getElementById('inDate').value = s;
+    document.getElementById('outDate').value = s;
+  })();
+
+  // Tab switch (入力フォーム)
+  function switchTab(tab) {
+    currentTab = tab;
+    document.getElementById('formIn').style.display  = tab==='in'  ? '' : 'none';
+    document.getElementById('formOut').style.display = tab==='out' ? '' : 'none';
+    document.getElementById('tabIn').className  = 'type-btn' + (tab==='in'  ? ' active-in'  : '');
+    document.getElementById('tabOut').className = 'type-btn' + (tab==='out' ? ' active-out' : '');
+  }
+
+  // View switch (一覧)
+  function switchView(v) {
+    currentView = v;
+    ['all','in','out'].forEach(function(x) {
+      document.getElementById('view'+x.charAt(0).toUpperCase()+x.slice(1)).className =
+        'view-btn' + (v===x ? ' active' : '');
+    });
+    render();
+  }
+
+  // Autocomplete
+  function refreshAC() {
+    var inDests  = [...new Set(records.filter(function(r){return r.type==='in'; }).map(function(r){return r.dest;}).filter(Boolean))];
+    var outDests = [...new Set(records.filter(function(r){return r.type==='out';}).map(function(r){return r.dest;}).filter(Boolean))];
+    var inDescs  = [...new Set(records.filter(function(r){return r.type==='in'; }).map(function(r){return r.desc;}).filter(Boolean))];
+    var outDescs = [...new Set(records.filter(function(r){return r.type==='out';}).map(function(r){return r.desc;}).filter(Boolean))];
+    var inStores = [...new Set(records.filter(function(r){return r.type==='in'; }).map(function(r){return r.store;}).filter(Boolean))];
+    var outStores= [...new Set(records.filter(function(r){return r.type==='out';}).map(function(r){return r.store;}).filter(Boolean))];
+    document.getElementById('destList').innerHTML    = inDests.map(function(v){return '<option value="'+v+'">';}).join('');
+    document.getElementById('outDestList').innerHTML = outDests.map(function(v){return '<option value="'+v+'">';}).join('');
+    document.getElementById('inDescList').innerHTML  = inDescs.map(function(v){return '<option value="'+v+'">';}).join('');
+    document.getElementById('outDescList').innerHTML = outDescs.map(function(v){return '<option value="'+v+'">';}).join('');
+    document.getElementById('inStoreList').innerHTML = inStores.map(function(v){return '<option value="'+v+'">';}).join('');
+    document.getElementById('outStoreList').innerHTML= outStores.map(function(v){return '<option value="'+v+'">';}).join('');
+  }
+
+  // Add 入金
+  document.getElementById('btnAddIn').addEventListener('click', function() {
+    var date=document.getElementById('inDate').value;
+    var dest=document.getElementById('inDest').value.trim();
+    var desc=document.getElementById('inDesc').value.trim();
+    var amount=parseInt(document.getElementById('inAmount').value,10);
+    var store=document.getElementById('inStore').value.trim();
+    if(!date){alert('日付を入力してください');return;}
+    if(!dest){alert('入金先を入力してください');return;}
+    if(!amount||amount<=0){alert('金額を入力してください');return;}
+    records.push({id:Date.now(),type:'in',date:date,dest:dest,desc:desc,amount:amount,store:store});
+    records.sort(function(a,b){return a.date.localeCompare(b.date);});
+    save(); refreshAC();
+    document.getElementById('inDest').value='';
+    document.getElementById('inDesc').value='';
+    document.getElementById('inAmount').value='';
+    render();
+    document.getElementById('inDest').focus();
+  });
+
+  // Add 出金
+  document.getElementById('btnAddOut').addEventListener('click', function() {
+    var date=document.getElementById('outDate').value;
+    var dest=document.getElementById('outDest').value.trim();
+    var desc=document.getElementById('outDesc').value.trim();
+    var amount=parseInt(document.getElementById('outAmount').value,10);
+    var store=document.getElementById('outStore').value.trim();
+    if(!date){alert('日付を入力してください');return;}
+    if(!dest){alert('支払先を入力してください');return;}
+    if(!amount||amount<=0){alert('金額を入力してください');return;}
+    records.push({id:Date.now(),type:'out',date:date,dest:dest,desc:desc,amount:amount,store:store});
+    records.sort(function(a,b){return a.date.localeCompare(b.date);});
+    save(); refreshAC();
+    document.getElementById('outDest').value='';
+    document.getElementById('outDesc').value='';
+    document.getElementById('outAmount').value='';
+    render();
+    document.getElementById('outDest').focus();
+  });
+
+  // Delete
+  window.deleteRecord = function(id) {
+    if(!confirm('このレコードを削除しますか？'))return;
+    records = records.filter(function(r){return r.id!==id;});
+    save(); render();
+  };
+
+  // Format
+  function fmt(n){return '¥'+Number(n).toLocaleString('ja-JP');}
+  function fmtD(s){if(!s)return'';var p=s.split('-');return p[1]+'/'+p[2];}
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+  // Render
+  function render() {
+    var month = records.filter(function(r){
+      var p=r.date.split('-').map(Number); return p[0]===cy&&p[1]===cm;
+    });
+    var totalIn  = month.filter(function(r){return r.type==='in'; }).reduce(function(s,r){return s+r.amount;},0);
+    var totalOut = month.filter(function(r){return r.type==='out';}).reduce(function(s,r){return s+r.amount;},0);
+    var bal = totalIn - totalOut;
+    document.getElementById('statIn').textContent  = fmt(totalIn);
+    document.getElementById('statOut').textContent = fmt(totalOut);
+    var balEl = document.getElementById('statBal');
+    balEl.textContent = (bal>=0?'':'-') + fmt(Math.abs(bal));
+    balEl.className = 's-value c-bal ' + (bal>=0?'positive':'negative');
+
+    var filtered = month.filter(function(r){
+      if(currentView==='all') return true;
+      return r.type===currentView;
+    });
+
+    var title = currentView==='in' ? '入金一覧' : currentView==='out' ? '出金一覧' : '入出金一覧';
+    document.getElementById('tableTitle').textContent = cy+'年'+cm+'月　'+title;
+
+    var wrap = document.getElementById('listWrap');
+    if(filtered.length===0){
+      wrap.innerHTML='<div class="empty">この月のデータはありません</div>';
+      return;
+    }
+
+    var html='<div class="rec-list">';
+    filtered.forEach(function(r){
+      var isIn = r.type==='in';
+      html += '<div class="rec-item type-'+r.type+'">'
+        +'<div class="rec-top">'
+        +  '<div class="rec-dest">'+esc(r.dest)+'</div>'
+        +  '<div class="rec-amount-'+(isIn?'in':'out')+'">'+(isIn?'＋':'－')+fmt(r.amount)+'</div>'
+        +'</div>'
+        +'<div class="rec-meta">'
+        +  '<span class="rec-date">'+fmtD(r.date)+'</span>'
+        +  '<span class="rec-type-badge-'+(isIn?'in':'out')+'">'+(isIn?'入金':'出金')+'</span>'
+        +  (r.desc?'<span class="rec-tag">'+esc(r.desc)+'</span>':'')
+        +  (r.store?'<span class="rec-tag">'+esc(r.store)+'</span>':'')
+        +'</div>'
+        +'<div class="rec-bottom">'
+        +  '<button class="btn-del" onclick="deleteRecord('+r.id+')">削除</button>'
+        +'</div>'
+        +'</div>';
+    });
+    html+='</div>';
+
+    if(currentView==='all'){
+      var balClass = bal>=0?'positive':'negative';
+      var balStr = (bal>=0?'＋':'－') + fmt(Math.abs(bal));
+      html+='<div class="total-row in-row"><span class="t-label">入金合計</span><span class="t-val">＋'+fmt(totalIn)+'</span></div>';
+      html+='<div class="total-row out-row"><span class="t-label">出金合計</span><span class="t-val">－'+fmt(totalOut)+'</span></div>';
+      html+='<div class="total-row bal-row"><span class="t-label">月間収支</span><span class="t-val '+balClass+'">'+balStr+'</span></div>';
+    } else if(currentView==='in'){
+      html+='<div class="total-row in-row"><span class="t-label">入金合計</span><span class="t-val">＋'+fmt(totalIn)+'</span></div>';
+    } else {
+      html+='<div class="total-row out-row"><span class="t-label">出金合計</span><span class="t-val">－'+fmt(totalOut)+'</span></div>';
+    }
+
+    wrap.innerHTML=html;
+  }
+
+  setMonth(cy, cm);
+  refreshAC();
+</script>
+</body>
+</html>
